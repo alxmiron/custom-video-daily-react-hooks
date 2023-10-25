@@ -6,6 +6,7 @@ import {
   useVideoTrack,
   useAudioTrack,
   useDailyEvent,
+  useInputSettings,
 } from '@daily-co/daily-react';
 
 import MeetingInformation from '../MeetingInformation/MeetingInformation';
@@ -38,6 +39,11 @@ export default function Tray({ leaveCall }) {
   const mutedVideo = localVideo.isOff;
   const mutedAudio = localAudio.isOff;
 
+  const {inputSettings, updateInputSettings} = useInputSettings();
+  const { audio: audioSettings, video: videoSettings } = inputSettings || {};
+  const audioProcessorType = audioSettings?.processor.type;
+  const videoProcessorType = videoSettings?.processor.type;
+
   /* When a remote participant sends a message in the chat, we want to display a differently colored
    * chat icon in the Tray as a notification. By listening for the `"app-message"` event we'll know
    * when someone has sent a message. */
@@ -58,6 +64,19 @@ export default function Tray({ leaveCall }) {
   const toggleAudio = useCallback(() => {
     callObject.setLocalAudio(mutedAudio);
   }, [callObject, mutedAudio]);
+
+  const toggleAudioProcessing = useCallback(() => {
+    const isEnabled = audioProcessorType && audioProcessorType !== 'none';
+    updateInputSettings({ audio: { processor: { type: isEnabled ? 'none' : 'noise-cancellation' }}})
+  }, [updateInputSettings, audioProcessorType])
+
+  const toggleVideoProcessing = useCallback(() => {
+    const isEnabled = videoProcessorType && videoProcessorType !== 'none';
+    updateInputSettings({ video: { processor: {
+      type: isEnabled ? 'none' : 'background-blur',
+      config: { strength: 0.3 }
+    }}})
+  }, [updateInputSettings, videoProcessorType])
 
   const toggleScreenShare = () => (isSharingScreen ? stopScreenShare() : startScreenShare());
 
@@ -92,6 +111,12 @@ export default function Tray({ leaveCall }) {
           <button onClick={toggleAudio} type="button">
             {mutedAudio ? <MicrophoneOff /> : <MicrophoneOn />}
             {mutedAudio ? 'Unmute mic' : 'Mute mic'}
+          </button>
+          <button onClick={toggleAudioProcessing} type="button">
+            {audioProcessorType === 'noise-cancellation' ? 'Disable noise cancellation' : 'Enable noise cancellation'}
+          </button>
+          <button onClick={toggleVideoProcessing} type="button">
+            {videoProcessorType === 'background-blur' ? 'Disable background blur' : 'Enable background blur'}
           </button>
         </div>
         <div className="actions">
