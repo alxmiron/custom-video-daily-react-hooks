@@ -7,6 +7,9 @@ import {
   useAudioTrack,
   useDailyEvent,
   useInputSettings,
+  useRecording,
+  useParticipant,
+  useLocalSessionId,
 } from '@daily-co/daily-react';
 
 import MeetingInformation from '../MeetingInformation/MeetingInformation';
@@ -43,6 +46,12 @@ export default function Tray({ leaveCall }) {
   const { audio: audioSettings, video: videoSettings } = inputSettings || {};
   const audioProcessorType = audioSettings?.processor.type;
   const videoProcessorType = videoSettings?.processor.type;
+
+  const selfSessionId = useLocalSessionId();
+  const { isRecording, startRecording, stopRecording, startedBy } = useRecording();
+  const participantData = useParticipant(startedBy);
+  const isSelfRecording = isRecording && selfSessionId === startedBy;
+  const recorderName = isRecording ? `${participantData?.user_name}` : null;
 
   /* When a remote participant sends a message in the chat, we want to display a differently colored
    * chat icon in the Tray as a notification. By listening for the `"app-message"` event we'll know
@@ -91,6 +100,14 @@ export default function Tray({ leaveCall }) {
     }
   };
 
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }
+
   return (
     <div className="tray">
       {showMeetingInformation && <MeetingInformation />}
@@ -131,6 +148,13 @@ export default function Tray({ leaveCall }) {
           <button onClick={toggleChat} type="button">
             {newChatMessage ? <ChatHighlighted /> : <ChatIcon />}
             {showChat ? 'Hide chat' : 'Show chat'}
+          </button>
+          <button onClick={toggleRecording} disabled={isRecording && !isSelfRecording} type="button">
+            {isRecording
+              ? isSelfRecording
+                ? `Stop recording`
+                : `${recorderName} started a recording`
+              : 'Record meeting'}
           </button>
         </div>
         <div className="leave">

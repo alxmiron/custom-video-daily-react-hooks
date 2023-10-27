@@ -15,6 +15,7 @@ module.exports = {
     'jsx-a11y/label-has-associated-control': 'off',
     'jsx-a11y/media-has-caption': 'off',
     'no-console': 'off',
+    'no-nested-ternary': 'off',
     'react/jsx-filename-extension': 'off',
     'react/no-array-index-key': 'off',
     'react/prop-types': 'off',
